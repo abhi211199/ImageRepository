@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { useState } from 'react';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
@@ -17,13 +18,14 @@ import * as firebase from "firebase/app";
 import "firebase/auth";
 import "firebase/firestore";
 import SnackBar from './SnackBar';
+import LinearProgress from '@material-ui/core/LinearProgress';
 
 const useStyles = makeStyles((theme) => ({
   root: {
     height: '100vh',
   },
   image: {
-    backgroundImage: 'url(https://source.unsplash.com/random)',
+    backgroundImage: 'url(https://source.unsplash.com/1600x900/?nature)',
     backgroundRepeat: 'no-repeat',
     backgroundColor:
       theme.palette.type === 'light' ? theme.palette.grey[50] : theme.palette.grey[900],
@@ -58,6 +60,7 @@ export default function SignInSide() {
 
   function signIn()
   {
+    ReactDOM.render(<LinearProgress />, document.getElementById("progress"));
     firebase.auth().signInWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value).catch(function(error) {
       // Handle Errors here.
       var errorCode = error.code;
@@ -67,7 +70,7 @@ export default function SignInSide() {
         message: errorMessage,
         severity: "error"
       });
-      // ...
+      document.getElementById("progress").innerHTML="";
     });
   }
 
@@ -82,6 +85,7 @@ export default function SignInSide() {
       });
       return;
     }
+    ReactDOM.render(<LinearProgress />, document.getElementById("progress"));
     firebase.auth().createUserWithEmailAndPassword(document.getElementById("email").value, document.getElementById("password").value).catch(function(error) {
       // Handle Errors here.
       var errorCode = error.code;
@@ -91,7 +95,7 @@ export default function SignInSide() {
         message: errorMessage,
         severity: "error"
       });
-      // ...
+      document.getElementById("progress").innerHTML="";
     });
   }
 
@@ -111,6 +115,9 @@ export default function SignInSide() {
       <Grid item xs={12} sm={8} md={5} component={Paper} elevation={6} square>
         <div className={classes.paper}>
           <Avatar className={classes.avatar}>
+            <Typography component="h1" variant="h5">
+
+            </Typography>
             <LockOutlinedIcon />
           </Avatar>
           <Typography component="h1" variant="h5">
@@ -151,6 +158,7 @@ export default function SignInSide() {
               id="password1"
               autoComplete="current-password"
             />}
+            <div id="progress"></div>
             <Button
               fullWidth
               variant="contained"

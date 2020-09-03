@@ -119,7 +119,7 @@ export default function SignInSide() {
               className={classes.submit}
               onClick={signOut}
             >
-              Sign Out
+              Sign Outs
             </Button>
             
           </form>

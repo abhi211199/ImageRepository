@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { useContext } from 'react';
 import { ToggleApp } from './Components/ContextManager';
 import './App.css';
@@ -16,18 +17,20 @@ function App() {
     if (user) {
       // User is signed in.
       setDisp(true);
+      ReactDOM.render(<ImageRepo />,document.getElementById("App"));
     } 
     else {
       // No user is signed in.
       setDisp(false);
+      ReactDOM.render(<Auth />,document.getElementById("App"));
     }
   });
 
   return (
     //disp=true for ImageRepo and disp=false for Auth
-    <div className="App">
-      {!disp && <Auth />}
-      {disp && <ImageRepo />}
+    <div className="App" id="App">
+      {/* {!disp && <Auth />}
+      {disp && <ImageRepo />} */}
     </div>
   );
 }
