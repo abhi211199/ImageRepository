@@ -18,7 +18,11 @@ import Typography from '@material-ui/core/Typography';
 import Fab from '@material-ui/core/Fab';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
-import Button from '@material-ui/core/Button';
+import * as firebase from "firebase/app";
+import "firebase/auth";
+import "firebase/firestore";
+import "firebase/storage";
+import { createWorker } from 'tesseract.js';
 import '../Image.css';
 
 const drawerWidth = 240;
@@ -92,12 +96,44 @@ export default function ResponsiveDrawer(props) {
 
   const container = window !== undefined ? () => window().document.body : undefined;
 
- 
+function ocr(url)
+{
+    const worker = createWorker({
+    logger: m => console.log(m)
+    });
+
+    (async () => {
+    await worker.load();
+    await worker.loadLanguage('eng');
+    await worker.initialize('eng');
+    const { data: { text } } = await worker.recognize('https://firebasestorage.googleapis.com/v0/b/imagerepository-38d54.appspot.com/o/DRPNxhUKKOdKpC7ipggMNgBm2cG2%2FScreenshot%20from%202020-07-04%2013-22-03.png?alt=media&token=e9972a47-4f88-4530-a9dc-f169dfa34c35');
+    console.log(text);
+    await worker.terminate();
+    })();
+}
+
+function uploadFile(file)
+{
+    var userId=firebase.auth().currentUser.uid;
+    var storageRef = firebase.storage().ref();
+    var ImageRef = storageRef.child(userId+'/'+file.name);
+    ImageRef.put(file).then(function(snapshot) {
+        console.log('Uploaded a blob or file!');
+        ImageRef.getDownloadURL().then(function(url){
+            console.log(url);
+            ocr(url);
+        })
+      });
+}
+
 function selectFiles()
 {
 
-    console.log(document.getElementById("selectFiles").files);
-    // console.log(this.file);
+    var files = document.getElementById("selectFiles").files;
+    for(var i=0;i<files.length;i++)
+    {
+        uploadFile(files[i]);
+    }
 }
   
   return (
@@ -154,12 +190,10 @@ function selectFiles()
         <div className={classes.toolbar} />
         <Typography paragraph>
         <input type="file" id="selectFiles" multiple accept="image/png, image/jpeg, image/svg, image/jpg" style={{display: "none"}} onChange={()=>selectFiles(this)} />
-        
-
-
-            <Fab color="primary" aria-label="add" id="upload" onClick={()=>{document.getElementById("selectFiles").click()}}>
+            
+        <Fab color="primary" aria-label="add" id="upload" onClick={()=>{document.getElementById("selectFiles").click()}}>
             <CloudUploadIcon /> 
-            </Fab>        
+        </Fab>        
       </Typography>
       </main>
     </div>
