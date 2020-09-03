@@ -1,24 +1,33 @@
 import React from 'react';
-import logo from './logo.svg';
+import { useContext } from 'react';
+import { ToggleApp } from './Components/ContextManager';
 import './App.css';
+import Auth from './Components/Auth';
+import ImageRepo from './Components/ImageRepo';
+import * as firebase from "firebase/app";
+import "firebase/auth";
+import "firebase/firestore";
 
 function App() {
+
+  const [disp, setDisp] = useContext(ToggleApp);
+
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+      // User is signed in.
+      setDisp(true);
+    } 
+    else {
+      // No user is signed in.
+      setDisp(false);
+    }
+  });
+
   return (
+    //disp=true for ImageRepo and disp=false for Auth
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      {!disp && <Auth />}
+      {disp && <ImageRepo />}
     </div>
   );
 }

@@ -2,12 +2,18 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
+import Test from './Components/Auth';
 import * as serviceWorker from './serviceWorker';
+import { ToggleAppProvider } from './Components/ContextManager';
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+      <ToggleAppProvider>
+        <App />
+      </ToggleAppProvider>
+  </React.StrictMode>
+  // <Test />
+  ,
   document.getElementById('root')
 );
 
