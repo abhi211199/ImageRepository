@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { useContext } from 'react';
 import { ToggleApp } from './Components/ContextManager';
-import './App.css';
+// import './App.css';
 import Auth from './Components/Auth';
 import ImageRepo from './Components/ImageRepo';
 import * as firebase from "firebase/app";
