@@ -23,6 +23,8 @@ import "firebase/auth";
 import "firebase/firestore";
 import "firebase/storage";
 import { createWorker } from 'tesseract.js';
+import * as mobilenet from '@tensorflow-models/mobilenet';
+import '@tensorflow/tfjs-backend-cpu';
 import '../Image.css';
 
 const drawerWidth = 240;
@@ -66,6 +68,7 @@ export default function ResponsiveDrawer(props) {
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = React.useState(false);
 
+  // tf.setBackend('wasm').then(() => label());
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
@@ -106,10 +109,26 @@ function ocr(url)
     await worker.load();
     await worker.loadLanguage('eng');
     await worker.initialize('eng');
-    const { data: { text } } = await worker.recognize('https://firebasestorage.googleapis.com/v0/b/imagerepository-38d54.appspot.com/o/DRPNxhUKKOdKpC7ipggMNgBm2cG2%2FScreenshot%20from%202020-07-04%2013-22-03.png?alt=media&token=e9972a47-4f88-4530-a9dc-f169dfa34c35');
+    const { data: { text } } = await worker.recognize(url);
     console.log(text);
     await worker.terminate();
     })();
+}
+
+async function label(url) 
+{
+  //convert a fFile() to Image() for Tensorflow JS
+  var ur = URL.createObjectURL(url),img = new Image();                         
+  img.onload = function() {                    
+      URL.revokeObjectURL(this.src);             
+    };
+  img.src = ur;  
+  const model = await mobilenet.load();
+
+// Classify the image.
+const predictions = await model.classify(img);
+console.log(predictions);
+
 }
 
 function uploadFile(file)
@@ -121,18 +140,17 @@ function uploadFile(file)
         console.log('Uploaded a blob or file!');
         ImageRef.getDownloadURL().then(function(url){
             console.log(url);
-            ocr(url);
+            label(url);
         })
       });
 }
 
 function selectFiles()
 {
-
     var files = document.getElementById("selectFiles").files;
     for(var i=0;i<files.length;i++)
     {
-        uploadFile(files[i]);
+        label(files[i]);
     }
 }
   
