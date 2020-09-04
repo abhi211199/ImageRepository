@@ -23,6 +23,8 @@ import { makeStyles, useTheme } from '@material-ui/core/styles';
 import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
 import AccountCircle from '@material-ui/icons/AccountCircle';
+import ImageSearchIcon from '@material-ui/icons/ImageSearch';
+import TextField from '@material-ui/core/TextField';
 import * as firebase from "firebase/app";
 import "firebase/auth";
 import "firebase/firestore";
@@ -318,7 +320,21 @@ function signOut()
       <main className={classes.content}>
         <div className={classes.toolbar} />
         <Typography paragraph>
-            
+
+          <Paper>
+          <div >
+            <Grid container spacing={1} alignItems="flex-end" justify="center">
+              <Grid item>
+                <ImageSearchIcon />
+              </Grid>
+              <Grid item>
+                <TextField id="input-with-icon-grid" label="With a grid" style={{width: "500px"}} />
+              </Grid>
+            </Grid>
+          </div>
+        
+          </Paper>  
+          <br/><br/>          
               <Grid item xs={12}>
                 <Grid container spacing={4}>
                   {
