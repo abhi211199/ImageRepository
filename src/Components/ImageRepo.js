@@ -24,6 +24,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import ImageSearchIcon from '@material-ui/icons/ImageSearch';
+import ImageIcon from '@material-ui/icons/Image';
 import TextField from '@material-ui/core/TextField';
 import * as firebase from "firebase/app";
 import "firebase/auth";
@@ -84,6 +85,7 @@ export default function ResponsiveDrawer(props) {
   const open = Boolean(anchorEl);
 
   const [data, setData] = useState([]);
+  const [categories, setCategories] = useState([]);
 
   useEffect(()=>console.log(data),[data]);
   
@@ -94,14 +96,38 @@ export default function ResponsiveDrawer(props) {
     db.collection("images").doc(userId).get().then(function(doc) {
       if (doc.exists) {
           console.log("Document data:", doc.data());
+          var tempCategories = [];
+          for(var i=0;i<doc.data().img.length;i++)
+          {
+            tempCategories=tempCategories.concat(doc.data().img[i].predictions.split(', '));
+          }
+          setCategories(tempCategories);
           setData(doc.data().img);
       } else {
           console.log("No such document!");
+          var userId=firebase.auth().currentUser.uid;
+          db.collection("images").doc(userId).set({
+            img: ""
+          }).then(function() {
+            db.collection("images").doc(userId)
+            .onSnapshot(function(doc) {
+              var tempCategories = [];
+              for(var i=0;i<doc.data().img.length;i++)
+              {
+                tempCategories=tempCategories.concat(doc.data().img[i].predictions.split(', '));
+              }
+              setCategories(tempCategories);
+              setData(doc.data().img);
+            });
+        })
+        .catch(function(error) {
+            console.error("Error writing document: ", error);
+        });
       }
   }).catch(function(error) {
       console.log("Error getting document:", error);
   });
-  },[]);
+},[]);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -118,24 +144,24 @@ export default function ResponsiveDrawer(props) {
   const drawer = (
     <div>
       <div className={classes.toolbar} />
+      <List>
+        <ListItem button>
+            <ListItemIcon>
+              <ImageIcon />
+            </ListItemIcon>
+            <ListItemText primary="Image Categories" />
+        </ListItem>
+      </List>
       <Divider />
       <List>
-        {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
-          <ListItem button key={text}>
-            <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
+        {categories.map((text, index) => (
+          <ListItem button key={text} onClick={()=>{document.getElementById("search").value=text;document.getElementById("search").focus();search(text)}}>
             <ListItemText primary={text} />
           </ListItem>
         ))}
       </List>
       <Divider />
-      <List>
-        {['All mail', 'Trash', 'Spam'].map((text, index) => (
-          <ListItem button key={text}>
-            <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
-            <ListItemText primary={text} />
-          </ListItem>
-        ))}
-      </List>
+      
     </div>
   );
 
@@ -146,12 +172,16 @@ function uploadData(url, file, text, predictions)
   console.log(url);console.log(text);console.log(predictions);
   var str=predictions[0].className;
   for(var i=1;i<predictions.length;i++)
-  str=str+" "+ predictions[i].className;
+  str=str+", "+ predictions[i].className;
+  var d = new Date();
+  var m=d.getMonth()+1;
+  d = d.getDate()+"-"+m+"-"+d.getFullYear();
   const temp={
     url: url,
     text: text,
     predictions: str,
-    name: file.name
+    name: file.name,
+    date: d
   };
   const tempData=[...data];
   tempData.push(temp);
@@ -167,6 +197,23 @@ function uploadData(url, file, text, predictions)
     console.error("Error writing document: ", error);
 });
 
+}
+
+function search(text)
+{
+  // console.log(text);
+  var docs=document.getElementsByClassName("metadatasearch");
+  var holder=document.getElementsByClassName("metadataholder");
+  // console.log(docs);
+  for(var i=0;i<docs.length;i++)
+  {
+    var txtValue = docs[i].textContent || docs[i].innerText;
+    if (txtValue.toLowerCase().includes(text) ) {
+      holder[i].style.display = "";
+    } else {
+      holder[i].style.display = "none";
+    }
+  }
 }
 
 function ocr(url, file)
@@ -328,7 +375,7 @@ function signOut()
                 <ImageSearchIcon />
               </Grid>
               <Grid item>
-                <TextField id="input-with-icon-grid" label="With a grid" style={{width: "500px"}} />
+                <TextField id="search" label="Please enter a search query" style={{width: "500px"}} onKeyUp={event=>search(event.target.value)} />
               </Grid>
             </Grid>
           </div>
@@ -340,9 +387,9 @@ function signOut()
                   {
                   data.length?
                   data.map((inputfield, index) => (
-                    <Grid key={index} item>
-                      <Paper className={classes.paper}>
-                        <Card name={inputfield.name} url={inputfield.url} />
+                    <Grid key={index} item className="metadataholder">
+                      <Paper className={classes.paper} >
+                        <Card name={inputfield.name} url={inputfield.url} date={inputfield.date} predictions={inputfield.predictions} text={inputfield.text} />
                       </Paper >
                     </Grid>
                   ))

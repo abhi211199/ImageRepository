@@ -32,7 +32,10 @@ export default function MediaCard(props) {
             {props.name}
           </Typography>
           <Typography variant="body2" color="textSecondary" component="p">
-            {"Uploaded on 13-07-19"}
+            {"Uploaded on " + props.date}
+          </Typography>
+          <Typography variant="body2" color="textSecondary" component="p" className="metadatasearch" style={{display: "none"}}>
+            {props.predictions + " " + props.text}
           </Typography>
         </CardContent>
       </CardActionArea>
