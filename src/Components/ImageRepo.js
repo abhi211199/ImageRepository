@@ -1,5 +1,7 @@
 import React from 'react';
-import PropTypes from 'prop-types';
+import { useState, useEffect } from 'react';
+import Grid from '@material-ui/core/Grid';
+import Paper from '@material-ui/core/Paper';
 import AppBar from '@material-ui/core/AppBar';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Divider from '@material-ui/core/Divider';
@@ -18,14 +20,19 @@ import Typography from '@material-ui/core/Typography';
 import Fab from '@material-ui/core/Fab';
 import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
+import MenuItem from '@material-ui/core/MenuItem';
+import Menu from '@material-ui/core/Menu';
+import AccountCircle from '@material-ui/icons/AccountCircle';
 import * as firebase from "firebase/app";
 import "firebase/auth";
 import "firebase/firestore";
 import "firebase/storage";
+import "firebase/firestore";
 import { createWorker } from 'tesseract.js';
 import * as mobilenet from '@tensorflow-models/mobilenet';
 import '@tensorflow/tfjs-backend-cpu';
 import '../Image.css';
+import Card from './Card';
 
 const drawerWidth = 240;
 
@@ -38,6 +45,10 @@ const useStyles = makeStyles((theme) => ({
       width: drawerWidth,
       flexShrink: 0,
     },
+  },
+  paper: {
+    // height: 140,
+    width: 300,
   },
   appBar: {
     [theme.breakpoints.up('sm')]: {
@@ -67,11 +78,40 @@ export default function ResponsiveDrawer(props) {
   const classes = useStyles();
   const theme = useTheme();
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const open = Boolean(anchorEl);
 
-  // tf.setBackend('wasm').then(() => label());
+  const [data, setData] = useState([]);
+
+  useEffect(()=>console.log(data),[data]);
+  
+  //load user data after component loads
+  useEffect(()=>{
+    var db = firebase.firestore();
+    var userId=firebase.auth().currentUser.uid;
+    db.collection("images").doc(userId).get().then(function(doc) {
+      if (doc.exists) {
+          console.log("Document data:", doc.data());
+          setData(doc.data().img);
+      } else {
+          console.log("No such document!");
+      }
+  }).catch(function(error) {
+      console.log("Error getting document:", error);
+  });
+  },[]);
+
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
+  const handleMenu = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
 
   const drawer = (
     <div>
@@ -99,10 +139,39 @@ export default function ResponsiveDrawer(props) {
 
   const container = window !== undefined ? () => window().document.body : undefined;
 
-function ocr(url)
+function uploadData(url, file, text, predictions)
 {
+  console.log(url);console.log(text);console.log(predictions);
+  var str=predictions[0].className;
+  for(var i=1;i<predictions.length;i++)
+  str=str+" "+ predictions[i].className;
+  const temp={
+    url: url,
+    text: text,
+    predictions: str,
+    name: file.name
+  };
+  const tempData=[...data];
+  tempData.push(temp);
+  setData(tempData);
+  var db = firebase.firestore();
+  var userId=firebase.auth().currentUser.uid;
+  db.collection("images").doc(userId).set({
+    img: tempData
+  }).then(function() {
+    console.log("Document successfully written!");
+})
+.catch(function(error) {
+    console.error("Error writing document: ", error);
+});
+
+}
+
+function ocr(url, file)
+{
+    console.log("hi from ocr()");
     const worker = createWorker({
-    logger: m => console.log(m)
+    // logger: m => console.log(m)
     });
 
     (async () => {
@@ -110,15 +179,17 @@ function ocr(url)
     await worker.loadLanguage('eng');
     await worker.initialize('eng');
     const { data: { text } } = await worker.recognize(url);
-    console.log(text);
+    // console.log(text);
     await worker.terminate();
+    label(url, file, text);
     })();
 }
 
-async function label(url) 
+async function label(url, file, text) 
 {
+  console.log("hi from label()");
   //convert a fFile() to Image() for Tensorflow JS
-  var ur = URL.createObjectURL(url),img = new Image();                         
+  var ur = URL.createObjectURL(file),img = new Image();                         
   img.onload = function() {                    
       URL.revokeObjectURL(this.src);             
     };
@@ -127,7 +198,8 @@ async function label(url)
 
 // Classify the image.
 const predictions = await model.classify(img);
-console.log(predictions);
+// console.log(predictions);
+uploadData(url, file, text, predictions);
 
 }
 
@@ -140,7 +212,7 @@ function uploadFile(file)
         console.log('Uploaded a blob or file!');
         ImageRef.getDownloadURL().then(function(url){
             console.log(url);
-            label(url);
+            ocr(url,file);
         })
       });
 }
@@ -150,10 +222,19 @@ function selectFiles()
     var files = document.getElementById("selectFiles").files;
     for(var i=0;i<files.length;i++)
     {
-        label(files[i]);
+        uploadFile(files[i]);
     }
 }
-  
+
+function signOut()
+{
+  firebase.auth().signOut().then(function() {
+    // Sign-out successful.
+  }).catch(function(error) {
+    // An error happened.
+  });
+}
+
   return (
     <div className={classes.root}>
       <CssBaseline />
@@ -171,8 +252,38 @@ function selectFiles()
           <Typography variant="h6" noWrap>
             Image Repository
           </Typography>
+          <div>
+              <IconButton
+                aria-label="account of current user"
+                aria-controls="menu-appbar"
+                aria-haspopup="true"
+                onClick={handleMenu}
+                color="inherit"
+              >
+                <AccountCircle />
+              </IconButton>
+              <Menu
+                id="menu-appbar"
+                anchorEl={anchorEl}
+                anchorOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                keepMounted
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                open={open}
+                onClose={handleClose}
+              >
+                <MenuItem onClick={handleClose}>{firebase.auth().currentUser.email}</MenuItem>
+                <MenuItem onClick={signOut} >Sign Out</MenuItem>
+              </Menu>
+            </div>
         </Toolbar>
       </AppBar>
+      
       <nav className={classes.drawer} aria-label="mailbox folders">
         {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
         <Hidden smUp implementation="css">
@@ -207,6 +318,24 @@ function selectFiles()
       <main className={classes.content}>
         <div className={classes.toolbar} />
         <Typography paragraph>
+            
+              <Grid item xs={12}>
+                <Grid container spacing={4}>
+                  {
+                  data.length?
+                  data.map((inputfield, index) => (
+                    <Grid key={index} item>
+                      <Paper className={classes.paper}>
+                        <Card name={inputfield.name} url={inputfield.url} />
+                      </Paper >
+                    </Grid>
+                  ))
+                  : <p>No Images found</p>
+                }
+                </Grid>
+              </Grid>
+            
+
         <input type="file" id="selectFiles" multiple accept="image/png, image/jpeg, image/svg, image/jpg" style={{display: "none"}} onChange={()=>selectFiles(this)} />
             
         <Fab color="primary" aria-label="add" id="upload" onClick={()=>{document.getElementById("selectFiles").click()}}>
