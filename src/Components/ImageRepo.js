@@ -8,12 +8,10 @@ import Divider from '@material-ui/core/Divider';
 import Drawer from '@material-ui/core/Drawer';
 import Hidden from '@material-ui/core/Hidden';
 import IconButton from '@material-ui/core/IconButton';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import MailIcon from '@material-ui/icons/Mail';
 import MenuIcon from '@material-ui/icons/Menu';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
@@ -26,6 +24,8 @@ import AccountCircle from '@material-ui/icons/AccountCircle';
 import ImageSearchIcon from '@material-ui/icons/ImageSearch';
 import ImageIcon from '@material-ui/icons/Image';
 import TextField from '@material-ui/core/TextField';
+import PhotoCamera from '@material-ui/icons/PhotoCamera';
+import Tooltip from '@material-ui/core/Tooltip';
 import * as firebase from "firebase/app";
 import "firebase/auth";
 import "firebase/firestore";
@@ -87,7 +87,7 @@ export default function ResponsiveDrawer(props) {
   const [data, setData] = useState([]);
   const [categories, setCategories] = useState([]);
 
-  useEffect(()=>console.log(data),[data]);
+  // useEffect(()=>console.log(data),[data]);
   
   //load user data after component loads
   useEffect(()=>{
@@ -103,6 +103,17 @@ export default function ResponsiveDrawer(props) {
           }
           setCategories(tempCategories);
           setData(doc.data().img);
+          var userId=firebase.auth().currentUser.uid;
+          db.collection("images").doc(userId)
+            .onSnapshot(function(doc) {
+              var tempCategories = [];
+              for(var i=0;i<doc.data().img.length;i++)
+              {
+                tempCategories=tempCategories.concat(doc.data().img[i].predictions.split(', '));
+              }
+              setCategories(tempCategories);
+              setData(doc.data().img);
+            });
       } else {
           console.log("No such document!");
           var userId=firebase.auth().currentUser.uid;
@@ -216,6 +227,13 @@ function search(text)
   }
 }
 
+function searchImage(predictions)
+{
+  console.log(predictions);
+  var searchStr=predictions[0].className.split('' );
+  // for(var i=0;i<)
+}
+
 function ocr(url, file)
 {
     console.log("hi from ocr()");
@@ -230,13 +248,14 @@ function ocr(url, file)
     const { data: { text } } = await worker.recognize(url);
     // console.log(text);
     await worker.terminate();
-    label(url, file, text);
+    label(url, file, text, true);
     })();
 }
 
-async function label(url, file, text) 
+async function label(url, file, text, searchType) 
 {
   console.log("hi from label()");
+  console.log(file);
   //convert a fFile() to Image() for Tensorflow JS
   var ur = URL.createObjectURL(file),img = new Image();                         
   img.onload = function() {                    
@@ -248,8 +267,10 @@ async function label(url, file, text)
 // Classify the image.
 const predictions = await model.classify(img);
 // console.log(predictions);
+if(!searchType)
+searchImage(predictions);
+else
 uploadData(url, file, text, predictions);
-
 }
 
 function uploadFile(file)
@@ -282,6 +303,24 @@ function signOut()
   }).catch(function(error) {
     // An error happened.
   });
+}
+
+function deleteItem(index)
+{
+  console.log("hi from delete");
+  var temp=[...data];
+  temp.splice(index,1);
+  setData(temp);
+  var db = firebase.firestore();
+  var userId=firebase.auth().currentUser.uid;
+  db.collection("images").doc(userId).set({
+    img: temp
+  }).then(function() {
+    console.log("Document successfully written!");
+})
+.catch(function(error) {
+    console.error("Error writing document: ", error);
+});
 }
 
   return (
@@ -376,6 +415,14 @@ function signOut()
               </Grid>
               <Grid item>
                 <TextField id="search" label="Please enter a search query" style={{width: "500px"}} onKeyUp={event=>search(event.target.value)} />
+                
+                <input accept="image/*" style={{display: "none"}} id="icon-button-file" type="file" onChange={event=>label("", event.target.files[0], "", false)} />
+                <label htmlFor="icon-button-file">
+                  <IconButton color="primary" aria-label="upload picture" component="span">
+                  <Tooltip title="Search similar Images"><PhotoCamera /></Tooltip>
+                  </IconButton>
+                </label>
+                
               </Grid>
             </Grid>
           </div>
@@ -389,7 +436,7 @@ function signOut()
                   data.map((inputfield, index) => (
                     <Grid key={index} item className="metadataholder">
                       <Paper className={classes.paper} >
-                        <Card name={inputfield.name} url={inputfield.url} date={inputfield.date} predictions={inputfield.predictions} text={inputfield.text} />
+                        <Card name={inputfield.name} url={inputfield.url} date={inputfield.date} predictions={inputfield.predictions} text={inputfield.text} onHome={()=>deleteItem(index)}/>
                       </Paper >
                     </Grid>
                   ))
@@ -399,7 +446,7 @@ function signOut()
               </Grid>
             
 
-        <input type="file" id="selectFiles" multiple accept="image/png, image/jpeg, image/svg, image/jpg" style={{display: "none"}} onChange={()=>selectFiles(this)} />
+        <input type="file" id="selectFiles" multiple accept="image/*" style={{display: "none"}} onChange={()=>selectFiles(this)} />
             
         <Fab color="primary" aria-label="add" id="upload" onClick={()=>{document.getElementById("selectFiles").click()}}>
             <CloudUploadIcon /> 

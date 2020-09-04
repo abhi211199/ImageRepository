@@ -35,7 +35,7 @@ export default function MediaCard(props) {
             {"Uploaded on " + props.date}
           </Typography>
           <Typography variant="body2" color="textSecondary" component="p" className="metadatasearch" style={{display: "none"}}>
-            {props.predictions + " " + props.text}
+            {props.predictions + " " + props.text + " " + props.name}
           </Typography>
         </CardContent>
       </CardActionArea>
@@ -43,7 +43,7 @@ export default function MediaCard(props) {
         <Button size="small" color="primary">
           Details
         </Button>
-        <Button size="small" color="primary">
+        <Button size="small" color="primary" onClick={()=>props.onHome()}>
           Delete
         </Button>
       </CardActions>
