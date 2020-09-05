@@ -26,6 +26,8 @@ import ImageIcon from '@material-ui/icons/Image';
 import TextField from '@material-ui/core/TextField';
 import PhotoCamera from '@material-ui/icons/PhotoCamera';
 import Tooltip from '@material-ui/core/Tooltip';
+import LinearProgress from '@material-ui/core/LinearProgress';
+import SnackBar from './SnackBar';
 import * as firebase from "firebase/app";
 import "firebase/auth";
 import "firebase/firestore";
@@ -93,10 +95,12 @@ export default function ResponsiveDrawer(props) {
 
   const [data, setData] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [state, setState] = React.useState({
+  const [state, setState] = useState({
     right: false,
   });
-  
+  const [progress, setProgress] = useState({disp: false})
+  const [msg, setMsg] = useState({disp: false});
+
   const toggleDrawer = (anchor, open, name, url, predictions, text) => (event) => {
     // if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
     //   return;
@@ -257,9 +261,13 @@ function uploadData(url, file, text, predictions)
     img: tempData
   }).then(function() {
     console.log("Document successfully written!");
+    setMsg({disp: true, severity: "success", message: "Data analysed successfully!"});
+    setProgress({disp: false});
 })
 .catch(function(error) {
     console.error("Error writing document: ", error);
+    setMsg({disp: true, severity: "error", message: "Error analysing Image!"});
+    setProgress({disp: false});
 });
 
 }
@@ -281,7 +289,7 @@ function search(text, searchType)
       if(txtValue.toLowerCase().includes(textArray[j].toLowerCase()))
       res=true;
       else 
-      res=false;
+      {res=false;break;}
     }
     else
     {
@@ -298,6 +306,7 @@ function search(text, searchType)
 
 function searchImage(predictions)
 {
+  setProgress({disp: false});
   console.log(predictions);
   var searchStr=predictions[0].className;
   for(var i=1;i<predictions.length;i++)
@@ -309,6 +318,7 @@ function searchImage(predictions)
 
 function ocr(url, file)
 {
+    setProgress({disp: true, msg: "Performing OCR on the image!"});
     console.log("hi from ocr()");
     const worker = createWorker({
     // logger: m => console.log(m)
@@ -327,6 +337,7 @@ function ocr(url, file)
 
 async function label(url, file, text, searchType) 
 {
+  setProgress({disp: true, msg: "Classifying the Image!"});
   console.log("hi from label()");
   console.log(file);
   //convert a fFile() to Image() for Tensorflow JS
@@ -348,6 +359,7 @@ uploadData(url, file, text, predictions);
 
 function uploadFile(file)
 {
+    setProgress({disp: true, msg: "Upload Started!"});
     var userId=firebase.auth().currentUser.uid;
     var storageRef = firebase.storage().ref();
     var ImageRef = storageRef.child(userId+'/'+file.name);
@@ -382,6 +394,7 @@ function deleteItem(index)
 {
   console.log("hi from delete");
   var temp=[...data];
+  var tempData=temp[index].name;
   temp.splice(index,1);
   setData(temp);
   var db = firebase.firestore();
@@ -390,13 +403,18 @@ function deleteItem(index)
     img: temp
   }).then(function() {
     console.log("Document successfully written!");
+    firebase.storage().ref().child(userId+"/"+tempData).delete().then(function(){
+      setMsg({disp: true, severity: "success", message: "Data deleted successfully!"});
+    });
 })
 .catch(function(error) {
     console.error("Error writing document: ", error);
+    setMsg({disp: true, severity: "error", message: "Data deletion unsuccessful"});
 });
 }
 
   return (
+    <div>
     <div className={classes.root}>
       <CssBaseline />
       <AppBar position="fixed" className={classes.appBar}>
@@ -487,7 +505,7 @@ function deleteItem(index)
                 <ImageSearchIcon />
               </Grid>
               <Grid item>
-                <TextField id="search" label="Please enter a search query" style={{width: "500px"}} onKeyUp={event=>search(event.target.value, true)} />
+                <TextField id="search" label="Search" placeholder="Please enter a search query" InputLabelProps={{shrink: true,}} style={{width: "500px"}} onKeyUp={event=>search(event.target.value, true)} />
                 <input accept="image/*" style={{display: "none"}} id="icon-button-file" type="file" onChange={event=>label("", event.target.files[0], "", false)} />
                 <label htmlFor="icon-button-file">
                   <IconButton color="primary" aria-label="upload picture" component="span">
@@ -500,9 +518,16 @@ function deleteItem(index)
                 </Paper>
             </Grid>
           </div>
-        
           </Paper>  
-          <br/><br/>          
+          <br/><br/>    
+          <Paper>
+            {progress.disp && <div>
+                  <LinearProgress color="secondary" />
+                  <i>{progress.msg}</i>
+              </div>
+            }
+          </Paper>      
+          <br />
               <Grid item xs={12}>
                 <Grid container spacing={4}>
                   {
@@ -520,7 +545,7 @@ function deleteItem(index)
               </Grid>
             
 
-        <input type="file" id="selectFiles" multiple accept="image/*" style={{display: "none"}} onChange={()=>selectFiles(this)} />
+        <input type="file" id="selectFiles" accept="image/*" style={{display: "none"}} onChange={()=>selectFiles(this)} />
             
         <Fab color="primary" aria-label="add" id="upload" onClick={()=>{document.getElementById("selectFiles").click()}}>
             <CloudUploadIcon /> 
@@ -529,7 +554,9 @@ function deleteItem(index)
       </main>
       <Drawer anchor={"right"} open={state["right"]} onClose={toggleDrawer("right", false)}>
             {list("right")}
-          </Drawer>
+      </Drawer>
+    </div>
+    {msg.disp && <SnackBar message={msg.message} severity={msg.severity} onHome={()=>{setMsg({disp: false})}} />}
     </div>
   );
 };
