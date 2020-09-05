@@ -506,7 +506,7 @@ function deleteItem(index)
               </Grid>
               <Grid item>
                 <TextField id="search" label="Search" placeholder="Please enter a search query" InputLabelProps={{shrink: true,}} style={{width: "500px"}} onKeyUp={event=>search(event.target.value, true)} />
-                <input accept="image/*" style={{display: "none"}} id="icon-button-file" type="file" onChange={event=>label("", event.target.files[0], "", false)} />
+                <input accept="image/jpg, image/svg, image/jpeg, image/png" style={{display: "none"}} id="icon-button-file" type="file" onChange={event=>label("", event.target.files[0], "", false)} />
                 <label htmlFor="icon-button-file">
                   <IconButton color="primary" aria-label="upload picture" component="span">
                   <Tooltip title="Search similar Images"><PhotoCamera /></Tooltip>
@@ -545,7 +545,7 @@ function deleteItem(index)
               </Grid>
             
 
-        <input type="file" id="selectFiles" accept="image/*" style={{display: "none"}} onChange={()=>selectFiles(this)} />
+        <input type="file" id="selectFiles" accept="image/jpg, image/svg, image/jpeg, image/png" style={{display: "none"}} onChange={()=>selectFiles(this)} />
             
         <Fab color="primary" aria-label="add" id="upload" onClick={()=>{document.getElementById("selectFiles").click()}}>
             <CloudUploadIcon /> 

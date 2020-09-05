@@ -6,17 +6,7 @@ import App from './App';
 import * as firebase from "firebase/app";
 import "firebase/auth";
 import "firebase/firestore";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDt69B4Frqrs_gH-waHShywNYXCbU5KgJA",
-  authDomain: "imagerepository-38d54.firebaseapp.com",
-  databaseURL: "https://imagerepository-38d54.firebaseio.com",
-  projectId: "imagerepository-38d54",
-  storageBucket: "imagerepository-38d54.appspot.com",
-  messagingSenderId: "60704598122",
-  appId: "1:60704598122:web:6526b60ef6f9dd060c4213",
-  measurementId: "G-WRL7SC5ZNE"
-};
+import firebaseConfig from './FirebaseConfig.js';
 
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
