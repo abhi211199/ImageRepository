@@ -36,6 +36,7 @@ import * as mobilenet from '@tensorflow-models/mobilenet';
 import '@tensorflow/tfjs-backend-cpu';
 import '../Image.css';
 import Card from './Card';
+import clsx from 'clsx';
 
 const drawerWidth = 240;
 
@@ -74,6 +75,12 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
     padding: theme.spacing(3),
   },
+  list: {
+    width: 300,
+  },
+  fullList: {
+    width: 'auto',
+  },
 }));
 
 export default function ResponsiveDrawer(props) {
@@ -86,8 +93,16 @@ export default function ResponsiveDrawer(props) {
 
   const [data, setData] = useState([]);
   const [categories, setCategories] = useState([]);
-
-  // useEffect(()=>console.log(data),[data]);
+  const [state, setState] = React.useState({
+    right: false,
+  });
+  
+  const toggleDrawer = (anchor, open, name, url, predictions, text) => (event) => {
+    // if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
+    //   return;
+    // }
+    setState({right: open, name: name, url: url, predictions: predictions, text: text });
+  };
   
   //load user data after component loads
   useEffect(()=>{
@@ -176,6 +191,24 @@ export default function ResponsiveDrawer(props) {
       </List>
       <Divider />
       
+    </div>
+  );
+
+  const list = (anchor) => (
+    <div
+      className={clsx(classes.list, {
+        [classes.fullList]: anchor === 'top' || anchor === 'bottom',
+      })}
+      role="presentation"
+      onClick={toggleDrawer(anchor, false)}
+      onKeyDown={toggleDrawer(anchor, false)}
+    >
+      <Divider />
+      <List>
+          <ListItem button>
+            <ListItemText primary={"Name "+ state.name} />
+          </ListItem>
+      </List>
     </div>
   );
 
@@ -437,15 +470,16 @@ function deleteItem(index)
               </Grid>
               <Grid item>
                 <TextField id="search" label="Please enter a search query" style={{width: "500px"}} onKeyUp={event=>search(event.target.value, true)} />
-                
                 <input accept="image/*" style={{display: "none"}} id="icon-button-file" type="file" onChange={event=>label("", event.target.files[0], "", false)} />
                 <label htmlFor="icon-button-file">
                   <IconButton color="primary" aria-label="upload picture" component="span">
                   <Tooltip title="Search similar Images"><PhotoCamera /></Tooltip>
                   </IconButton>
                 </label>
-                
               </Grid>
+                <Paper>
+                  <i>Please enter a search query in the search field(multiple query should be comma separated, eg: `cat, grass` with no trailing commas)</i>
+                </Paper>
             </Grid>
           </div>
         
@@ -458,7 +492,7 @@ function deleteItem(index)
                   data.map((inputfield, index) => (
                     <Grid key={index} item className="metadataholder">
                       <Paper className={classes.paper} >
-                        <Card name={inputfield.name} url={inputfield.url} date={inputfield.date} predictions={inputfield.predictions} text={inputfield.text} onHome={()=>deleteItem(index)}/>
+                        <Card name={inputfield.name} url={inputfield.url} date={inputfield.date} predictions={inputfield.predictions} text={inputfield.text} onHome={()=>deleteItem(index)} onDetails={toggleDrawer("right", true, inputfield.name, inputfield.url, inputfield.predictions, inputfield.text)} />
                       </Paper >
                     </Grid>
                   ))
@@ -475,6 +509,9 @@ function deleteItem(index)
         </Fab>        
       </Typography>
       </main>
+      <Drawer anchor={"right"} open={state["right"]} onClose={toggleDrawer("right", false)}>
+            {list("right")}
+          </Drawer>
     </div>
   );
 };
