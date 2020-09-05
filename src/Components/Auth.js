@@ -114,6 +114,10 @@ export default function SignInSide() {
       <Grid item xs={false} sm={4} md={7} className={classes.image} />
       <Grid item xs={12} sm={8} md={5} component={Paper} elevation={6} square>
         <div className={classes.paper}>
+          
+          <Typography variant="h6" gutterBottom>
+            <i>Welcome to Image Repository, your own library of images, which helps you to add, delete and classify images into groups!</i>
+          </Typography>
           <Avatar className={classes.avatar}>
             <Typography component="h1" variant="h5">
 
