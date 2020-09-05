@@ -27,10 +27,8 @@ function App() {
   });
 
   return (
-    //disp=true for ImageRepo and disp=false for Auth
     <div className="App" id="App">
-      {/* {!disp && <Auth />}
-      {disp && <ImageRepo />} */}
+      
     </div>
   );
 }
