@@ -101,6 +101,7 @@ export default function ResponsiveDrawer(props) {
           {
             tempCategories=tempCategories.concat(doc.data().img[i].predictions.split(', '));
           }
+          tempCategories=Array.from(new Set(tempCategories));
           setCategories(tempCategories);
           setData(doc.data().img);
           var userId=firebase.auth().currentUser.uid;
@@ -111,6 +112,7 @@ export default function ResponsiveDrawer(props) {
               {
                 tempCategories=tempCategories.concat(doc.data().img[i].predictions.split(', '));
               }
+              tempCategories=Array.from(new Set(tempCategories));
               setCategories(tempCategories);
               setData(doc.data().img);
             });
@@ -127,6 +129,7 @@ export default function ResponsiveDrawer(props) {
               {
                 tempCategories=tempCategories.concat(doc.data().img[i].predictions.split(', '));
               }
+              tempCategories=Array.from(new Set(tempCategories));
               setCategories(tempCategories);
               setData(doc.data().img);
             });
@@ -166,7 +169,7 @@ export default function ResponsiveDrawer(props) {
       <Divider />
       <List>
         {categories.map((text, index) => (
-          <ListItem button key={text} onClick={()=>{document.getElementById("search").value=text;document.getElementById("search").focus();search(text)}}>
+          <ListItem button key={text} onClick={()=>{document.getElementById("search").value=text;document.getElementById("search").focus();search(text, true)}}>
             <ListItemText primary={text} />
           </ListItem>
         ))}
@@ -210,7 +213,7 @@ function uploadData(url, file, text, predictions)
 
 }
 
-function search(text)
+function search(text, searchType)
 {
   // console.log(text);
   var docs=document.getElementsByClassName("metadatasearch");
@@ -219,7 +222,22 @@ function search(text)
   for(var i=0;i<docs.length;i++)
   {
     var txtValue = docs[i].textContent || docs[i].innerText;
-    if (txtValue.toLowerCase().includes(text) ) {
+    var textArray=text.split(', ');
+    var res=false;
+    for(var j=0;j<textArray.length;j++)
+    if(searchType)
+    {
+      if(txtValue.toLowerCase().includes(textArray[j].toLowerCase()))
+      res=true;
+      else 
+      res=false;
+    }
+    else
+    {
+      if(txtValue.toLowerCase().includes(textArray[j].toLowerCase()))
+      res=true;
+    }
+    if (res) {
       holder[i].style.display = "";
     } else {
       holder[i].style.display = "none";
@@ -230,7 +248,11 @@ function search(text)
 function searchImage(predictions)
 {
   console.log(predictions);
-  var searchStr=predictions[0].className.split('' );
+  var searchStr=predictions[0].className;
+  for(var i=1;i<predictions.length;i++)
+  searchStr+=", "+predictions[i].className;
+  document.getElementById("search").value=searchStr;
+  search(searchStr, false);
   // for(var i=0;i<)
 }
 
@@ -414,7 +436,7 @@ function deleteItem(index)
                 <ImageSearchIcon />
               </Grid>
               <Grid item>
-                <TextField id="search" label="Please enter a search query" style={{width: "500px"}} onKeyUp={event=>search(event.target.value)} />
+                <TextField id="search" label="Please enter a search query" style={{width: "500px"}} onKeyUp={event=>search(event.target.value, true)} />
                 
                 <input accept="image/*" style={{display: "none"}} id="icon-button-file" type="file" onChange={event=>label("", event.target.files[0], "", false)} />
                 <label htmlFor="icon-button-file">
