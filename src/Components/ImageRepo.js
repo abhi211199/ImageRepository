@@ -229,7 +229,7 @@ export default function ResponsiveDrawer(props) {
     </div>
     <Divider />
     <ListItem button>
-    <a href={state.url} target="_blank" rel="noopener noreferrer"><ListItemText primary="Click to Download!" /></a>
+    <a href={state.url} target="_blank" rel="noopener noreferrer"><ListItemText primary="View Image!" /></a>
     </ListItem>
     </div>
   );
