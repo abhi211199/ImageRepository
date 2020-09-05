@@ -70,7 +70,7 @@ export default function SignInSide() {
         message: errorMessage,
         severity: "error"
       });
-      document.getElementById("progress").innerHTML="";
+      ReactDOM.render("", document.getElementById("progress"));
     });
   }
 
@@ -95,7 +95,7 @@ export default function SignInSide() {
         message: errorMessage,
         severity: "error"
       });
-      document.getElementById("progress").innerHTML="";
+      ReactDOM.render("", document.getElementById("progress"));
     });
   }
 

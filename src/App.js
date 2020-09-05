@@ -11,17 +11,17 @@ import "firebase/firestore";
 
 function App() {
 
-  const [disp, setDisp] = useContext(ToggleApp);
+  // const [disp, setDisp] = useContext(ToggleApp);
 
   firebase.auth().onAuthStateChanged(function(user) {
     if (user) {
       // User is signed in.
-      setDisp(true);
+      // setDisp(true);
       ReactDOM.render(<ImageRepo />,document.getElementById("App"));
     } 
     else {
       // No user is signed in.
-      setDisp(false);
+      // setDisp(false);
       ReactDOM.render(<Auth />,document.getElementById("App"));
     }
   });
