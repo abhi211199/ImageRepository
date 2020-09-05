@@ -195,6 +195,9 @@ export default function ResponsiveDrawer(props) {
   );
 
   const list = (anchor) => (
+    <div className={clsx(classes.list, {
+      [classes.fullList]: anchor === 'top' || anchor === 'bottom',
+    })}>
     <div
       className={clsx(classes.list, {
         [classes.fullList]: anchor === 'top' || anchor === 'bottom',
@@ -206,9 +209,24 @@ export default function ResponsiveDrawer(props) {
       <Divider />
       <List>
           <ListItem button>
-            <ListItemText primary={"Name "+ state.name} />
+          <img src={state.url} width="150px" height="150px" alt={state.name} style={{marginLeft: "60px", border: "2px solid black"}} />
           </ListItem>
+          <ListItem button>
+            <ListItemText primary={"Name: "+ state.name} />
+          </ListItem>
+          <ListItem button>
+            <ListItemText primary={"Predictions: "+ state.predictions} />
+          </ListItem>
+          <ListItem button>
+            <ListItemText primary={"Text: "+ state.text} />
+          </ListItem>
+          
       </List>
+    </div>
+    <Divider />
+    <ListItem button>
+    <a href={state.url} target="_blank" rel="noopener noreferrer"><ListItemText primary="Click to Download!" /></a>
+    </ListItem>
     </div>
   );
 
