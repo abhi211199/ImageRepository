@@ -92,7 +92,7 @@ export default function ResponsiveDrawer(props) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
-
+  //data is for storing details of images, categories stores the labels of left sidebar, state for right sidebar, progress -> progress bar, msg -> trigger snackbar 
   const [data, setData] = useState([]);
   const [categories, setCategories] = useState([]);
   const [state, setState] = useState({
@@ -124,6 +124,7 @@ export default function ResponsiveDrawer(props) {
           setCategories(tempCategories);
           setData(doc.data().img);
           var userId=firebase.auth().currentUser.uid;
+          //register onChange listener
           db.collection("images").doc(userId)
             .onSnapshot(function(doc) {
               var tempCategories = [];
@@ -141,6 +142,7 @@ export default function ResponsiveDrawer(props) {
           db.collection("images").doc(userId).set({
             img: ""
           }).then(function() {
+            //register onChange listener
             db.collection("images").doc(userId)
             .onSnapshot(function(doc) {
               var tempCategories = [];
@@ -236,6 +238,7 @@ export default function ResponsiveDrawer(props) {
 
   const container = window !== undefined ? () => window().document.body : undefined;
 
+  // upload data to firebase
 function uploadData(url, file, text, predictions)
 {
   console.log(url);console.log(text);console.log(predictions);
